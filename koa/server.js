@@ -97,6 +97,22 @@ const createHoRawLaw = async (ctx)=>{
     ctx.body=''
 }
 
+const getFacilityList = async (ctx)=>{
+    const session = driver.session()
+    const res = await session.run('match (f:facility) return f.ssCode, f.ssName order by f.ssCode')
+    ctx.body = res.records
+    // console.log(res)
+    session.close()
+}
+
+const getFacilityById = async (ctx)=>{
+    const ssCode = ctx.query.id
+    const session = driver.session()
+    const res = await session.run(`match (f:facility) where f.ssCode = '${ssCode}' return f`)
+    ctx.body = res.records
+    console.log(res)
+    session.close()
+}
 
 const startServer = async ()=>{
     const app = new Koa()
@@ -116,7 +132,9 @@ const startServer = async ()=>{
     // static_pages.use(serve(__dirname.replace('koa','') + 'build'))
     router.get('/api', test)
     router.get('/api/detail', getLawDetail, saveLawDetail)
-    router.get('/api/facilities', getFacilityByHoMok)
+    // router.get('/api/facilities', getFacilityByHoMok)
+    router.get('/api/facilities', getFacilityList)
+    router.get('/api/facility-by-id', getFacilityById)
     // router.get('/api/make-mok-raw-law', createMokRawLaw)
     router.put('/api/make-mok-raw-law', KoaBody(), createMokRawLaw)
     router.put('/api/make-ho-raw-law', KoaBody(), createHoRawLaw)
