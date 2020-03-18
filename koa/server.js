@@ -64,7 +64,7 @@ driver.close()
 const getFacilityByHoMok = async (ctx)=>{
     const {ho, mok} = ctx.query
     const session = driver.session()
-    const res = await session.run(`match (n:ss) where n.ho=${ho} and n.mok='${mok}' return n`)
+    const res = await session.run(`match (n:facility) where n.ho=${ho} and n.mok='${mok}' return n`)
     ctx.body = res.records
     session.close()
 }
@@ -78,7 +78,7 @@ const createMokRawLaw = async (ctx)=>{
     const session = driver.session()
     if (mok) {
         session.run(`create (n:rawLaw) set n.ho=${ho}, n.mok='${mok}', n.lawText='${lawText}' `).then(()=>{
-            session.run(`match (f:ss {ho:${ho}, mok:'${mok}'}), (n:rawLaw {ho:${ho}, mok:'${mok}'}) merge (f)-[r:represent]->(n)`)
+            session.run(`match (f:facility {ho:${ho}, mok:'${mok}'}), (n:rawLaw {ho:${ho}, mok:'${mok}'}) merge (f)-[r:represent]->(n)`)
             .then(console.log).catch(err=>console.log(err)).then(()=>{session.close()})
         })
     } else {
@@ -91,7 +91,7 @@ const createHoRawLaw = async (ctx)=>{
     const {ho, lawText} = ctx.request.body
     const session = driver.session()
     session.run(`create (n:rawLaw) set n.ho=${ho}, n.lawText='${lawText}'`).then(()=>{
-        session.run(`match (f:ss {ho:${ho}, mok:'허'}), (n:rawLaw {ho:${ho}}) where n.mok is null merge (f)-[r:represent]->(n)`)
+        session.run(`match (f:facility {ho:${ho}, mok:'허'}), (n:rawLaw {ho:${ho}}) where n.mok is null merge (f)-[r:represent]->(n)`)
         .then(console.log).catch(err=>console.log(err)).then(()=>{session.close()})
     })
     ctx.body=''
