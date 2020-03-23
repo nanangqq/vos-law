@@ -105,12 +105,51 @@ const getFacilityList = async (ctx)=>{
     session.close()
 }
 
+const getConstList = async (ctx)=>{
+    const session = driver.session()
+    const res = await session.run('match (c:const) return id(c), c.constNum')
+    ctx.body = res.records
+    console.log(res)
+    session.close()
+}
+
+const getNodeList = async (ctx)=>{
+    const labelPicker = {
+        시설정의:'facility',
+        법규:'const',
+        시설한정조건: 'limitation',
+        법규원문: 'rawLaw'
+    }
+    console.log(ctx.query)
+    const label = labelPicker[ctx.query.cat]
+    const session = driver.session()
+    const res = await session.run(`match (n:${label}) return id(n), n._str order by n._str`)
+    ctx.body = res.records
+    // console.log(res)
+    session.close()
+}
+
 const getFacilityById = async (ctx)=>{
     const ssCode = ctx.query.id
     const session = driver.session()
     const res = await session.run(`match (f:facility) where f.ssCode = '${ssCode}' return f`)
     ctx.body = res.records
-    console.log(res)
+    // console.log(res)
+    session.close()
+}
+const getNodeById = async (ctx)=>{
+    const nodeId = ctx.query.id
+    const session = driver.session()
+    const res = await session.run(`match (n) where id(n) = ${nodeId} return n`)
+    ctx.body = res.records
+    session.close()
+}
+
+const getLinkedNodes = async (ctx)=>{
+    const nodeId = ctx.query.id
+    const session = driver.session()
+    const res = await session.run(`match (n)--(l) where id(n) = ${nodeId} return id(l), l._str, labels(l)[0]`)
+    ctx.body = res.records
     session.close()
 }
 
@@ -132,9 +171,14 @@ const startServer = async ()=>{
     // static_pages.use(serve(__dirname.replace('koa','') + 'build'))
     router.get('/api', test)
     router.get('/api/detail', getLawDetail, saveLawDetail)
+
     // router.get('/api/facilities', getFacilityByHoMok)
     router.get('/api/facilities', getFacilityList)
+    router.get('/api/consts', getConstList)
+    router.get('/api/get-nodes-by-cat', getNodeList)
     router.get('/api/facility-by-id', getFacilityById)
+    router.get('/api/node-by-id', getNodeById)
+    router.get('/api/linked-nodes', getLinkedNodes)
     // router.get('/api/make-mok-raw-law', createMokRawLaw)
     router.put('/api/make-mok-raw-law', KoaBody(), createMokRawLaw)
     router.put('/api/make-ho-raw-law', KoaBody(), createHoRawLaw)
