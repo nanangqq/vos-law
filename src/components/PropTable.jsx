@@ -4,7 +4,8 @@ import MaUTable from '@material-ui/core/Table'
 import TableBody from '@material-ui/core/TableBody'
 import TableCell from '@material-ui/core/TableCell'
 import TableRow from '@material-ui/core/TableRow'
-import Input from '@material-ui/core/Input'
+// import Input from '@material-ui/core/Input'
+import TextField from '@material-ui/core/TextField'
 
 const nodeLabels = ['facility', 'const', 'limitation', 'rawLaw']
 
@@ -41,7 +42,11 @@ const EditableCell = (data) => {
         <div>{value}</div>:
         nodeLabels.indexOf(rowName)!==-1 ?
         <div>{value}</div>:
-        <Input value={value} onChange={onChange} onBlur={onBlur} style={{width:300}} />
+        <div>
+            {/* <Input value={value} onChange={onChange} onBlur={onBlur} style={{width:300}} /> */}
+            <TextField value={value} onChange={onChange} onBlur={onBlur} style={{width:300}} />
+        </div>
+
 }
 
 

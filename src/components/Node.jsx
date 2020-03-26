@@ -20,8 +20,15 @@ const colorCode = (ho)=>{
 }
 
 const flipBool = bool=>!bool
-const Node = ({nodeId, nodeName})=>{
-    // const [ho, mok, name] = facilityId.split('-')
+
+const propsWillBeShown = {
+    facility: ['ho', 'hoName', 'mok', 'mokName', 'ssName', 'ssConst1', 'ssConst2', 'ssConst3', 'ssExcluded', 'ssCodeExcluded', 'created_dt', 'updated_dt'],
+    const: ['law', 'landuse', 'constNum', 'effect', 'avails', 'ssExcluded', 'created_dt'],
+    limitation: ['lNum', 'sikText', 'created_dt'],
+    rawLaw: ['ho', 'mok', 'lawText', 'created_dt']
+}
+
+const Node = ({nodeId, nodeName, nodeLabel})=>{
     const [originalData, setOriginalData] = useState({})
     const [editedData, setEditedData] = useState({})
     const [infoBox, setInfoBox] = useState('')
@@ -51,22 +58,15 @@ const Node = ({nodeId, nodeName})=>{
     )
 
     useEffect(()=>{
-        // console.log(infoBox)
-        // console.log(open)
         if (open) {
-            const tmp = []
+
             Axios.get(`/api/node-by-id?id=${nodeId}`).then(res=>{
                 const node = res.data[0]._fields[0]
-                // Object.keys(facility.properties).forEach(prop=>{
-                //     tmp.push(<div>{prop}:{JSON.stringify(facility.properties[prop])}</div>)
-                // })
-                // // console.log(tmp)
-                // console.log(facility)
-                const tableData = Object.keys(node.properties).map(prop=>({
+                // const tableData = Object.keys(node.properties).map(prop=>({
+                const tableData = propsWillBeShown[nodeLabel].map(prop=>({
                     propName: prop,
                     value: JSON.stringify(node.properties[prop])
                 }))
-                // console.log(tableData)
                 setInfoBox(<PropTable data={tableData} setEdited={setEdited} setEditedData={setEditedData} />)
                 setOriginalData(prev=>tableData.reduce((obj, row)=>({
                     ...obj,
@@ -75,10 +75,6 @@ const Node = ({nodeId, nodeName})=>{
             })
 
             Axios.get(`/api/linked-nodes?id=${nodeId}`).then(res=>{
-                // const records = res.data
-                // console.log(res)
-                // console.log(res.data.get(0))
-                // console.log(res.data.filter(node=>node._fields[2]==='rawLaw'))
                 const nodes = res.data.reduce((prev, cur)=>{
                     return { ...prev, [cur._fields[2]]: [...prev[cur._fields[2]], cur] }
                 }, {
@@ -89,9 +85,10 @@ const Node = ({nodeId, nodeName})=>{
                 })
 
                 const linkedNodesData = Object.keys(nodes).filter(label=>nodes[label].length).map(label=>{
-                    const linkedWithLabel = nodes[label].map(node=>(
-                        <Node key={node._fields[0].low} nodeId={node._fields[0].low} nodeName={node._fields[1]} />
-                    ))
+                    const linkedWithLabel = [<Node key={'+'} nodeId={''} nodeName={'+'} nodeLabel={''} nodeFilter={''} />,
+                        ...nodes[label].map(node=>(
+                        <Node key={node._fields[0].low} nodeId={node._fields[0].low} nodeName={node._fields[1]} nodeLabel={node._fields[2]} />
+                    ))]
                     return ({propName:`${label}`, value: linkedWithLabel})
                 })
 
@@ -100,22 +97,6 @@ const Node = ({nodeId, nodeName})=>{
                     ...obj,
                     [row.propName]: row.value.map(node=>node.key)
                 }), prev))
-
-                // setLinkedNodes(Object.keys(nodes).filter(label=>nodes[label].length).map(label=>{
-                //     const linkedWithLabel = nodes[label].map(node=>(
-                //         <Node key={node._fields[0].low} nodeId={node._fields[0].low} nodeName={node._fields[1]} />
-                //     ))
-                //     return (<PropTable key={`${nodeId}_${label}`} data={[{propName:`${label}`, value: linkedWithLabel}]} setEdited={setEdited} />)
-                // }))
-                // const linked = res.data.map(rec=>(
-                //     <Node key={rec._fields[0].low} nodeId={rec._fields[0].low} nodeName={rec._fields[1]} />
-                // )) 
-                // // res.data.filter()
-                // // records.forEach(n=>{
-                // //     tmp.push(<Node nodeId='1-1-1' nodeName={n._fields[0].properties.lawText} />)
-                // // })
-
-                // setLinkedNodes(<PropTable data={[{propName:'nodes', value: linked}]} />)
             })
 
         } else {
@@ -133,9 +114,10 @@ const Node = ({nodeId, nodeName})=>{
                 style={{
                     border: `2px solid gray`, //${colorCode(ho)}`,
                     backgroundColor: '#eee',
+                    opacity: nodeName==='+'? 0.5: 1,
                     width:300,
                     borderRadius:4,
-                    // textAlign:'center',
+                    textAlign: nodeName==='+'? 'center': 'left',
                     padding:4,
                     margin:8
                 }}

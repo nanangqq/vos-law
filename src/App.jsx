@@ -1,10 +1,14 @@
-import React, {useState, useEffect} from 'react'
+import React, {useState, useEffect, useMemo, useCallback} from 'react'
 import Axios from 'axios'
 import CssBaseline from '@material-ui/core/CssBaseline'
+import Checkbox from '@material-ui/core/Checkbox'
+import FormGroup from '@material-ui/core/FormGroup'
+import FormControlLabel from '@material-ui/core/FormControlLabel'
 
-import Tabs from "./components/Tabs";
+import Tabs from "./components/Tabs"
 import LawParser from './utils/LawParser'
 import Node from './components/Node'
+import FilterGroup from './components/FilterGroup'
 
 // const pickApi = {
 //     0: '/api/facilities',
@@ -14,29 +18,54 @@ import Node from './components/Node'
 
 const tabNames = ['시설정의', '법규', '시설한정조건', '법규원문']
 
+const tabLoc = 50
+const checkBoxLeftMargin = 10
+
 export default ()=>{
     const [tab, setTab] = useState(0)
     const [nodes, setNodes] = useState([])
+    const [filtered, setFiltered] = useState([])
+    const filterFunctions = useMemo( ()=>[
+        node=>filtered.indexOf(node.props.nodeFilter.low)!==-1,
+        node=>filtered.indexOf(node.props.nodeFilter)!==-1,
+        node=>{
+            try {
+                // console.log(node.props.nodeFilter.reduce((prev, cur)=>prev+(filtered.indexOf(cur.low)!==-1), 0))
+                const containChk = (node.props.nodeFilter.reduce((prev, cur)=>prev+(filtered.indexOf(cur.low)!==-1), 0))
+                return containChk? true : false
+            } catch (error) {
+                return true
+            }
+        },
+        node=>filtered.indexOf(node.props.nodeFilter)!==-1
+    ], [filtered])
+    
+    // useEffect(()=>{
+    //     console.log(checked)
+    // }, [checked])
 
     useEffect(()=>{
-        Axios.get(`/api/get-nodes-by-cat?cat=${encodeURI(tabNames[tab])}`).then(res=>{
-            // console.log(res)
+        Axios.get(`/api/get-nodes-by-label?label=${encodeURI(tabNames[tab])}`).then(res=>{
             setNodes( res.data.map(rec=>(
-                <Node key={rec._fields[0].low} nodeId={rec._fields[0].low} nodeName={rec._fields[1]} />
+                <Node key={rec._fields[0].low} nodeId={rec._fields[0].low} nodeName={rec._fields[1]} nodeLabel={rec._fields[2]} nodeFilter={rec._fields[3]} />
             )) )
-            // setNodes(records)
         })
     },[tab])
+
+    // useEffect(()=>{
+    //     console.log(filtered)
+    // }, [filtered])
 
     return (
         <div>
             <CssBaseline />
             {/* <LawParser /> */}
-            <Tabs tabs={tabNames}  setTab={setTab} />
-            <div style={{position:'relative', top:60}}>
-                {nodes}
+            <Tabs tabs={tabNames} setTab={setTab} />
+            <FilterGroup key={tab} tab={tab} setFiltered={setFiltered} />
+            <div style={{position: 'relative', top: tabLoc}} >
+                <Node key={'+'} nodeId={''} nodeName={'+'} nodeLabel={''} nodeFilter={''} />
+                {nodes.filter( filterFunctions[tab] )}
             </div>
         </div>
     )
 }
-// "  1. 제1종전용주거지역안에서 건축할 수 있는 건축물 : 별표 2에 규정된 건축물"

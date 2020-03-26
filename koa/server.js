@@ -120,10 +120,18 @@ const getNodeList = async (ctx)=>{
         시설한정조건: 'limitation',
         법규원문: 'rawLaw'
     }
-    console.log(ctx.query)
-    const label = labelPicker[ctx.query.cat]
+    const filterColPicker = {
+        facility: 'n.ho',
+        const: 'n.law',
+        limitation: '[(n)--(f:facility) | f.ssNum]',
+        rawLaw: 'n.law'
+    }
+    // console.log(ctx.query)
+    const label = labelPicker[ctx.query.label]
+    const filterCol = filterColPicker[label]
+    // console.log(filterCol)
     const session = driver.session()
-    const res = await session.run(`match (n:${label}) return id(n), n._str order by n._str`)
+    const res = await session.run(`match (n:${label}) return id(n), n._str, labels(n)[0], ${filterCol} order by n._str`)
     ctx.body = res.records
     // console.log(res)
     session.close()
@@ -137,6 +145,7 @@ const getFacilityById = async (ctx)=>{
     // console.log(res)
     session.close()
 }
+
 const getNodeById = async (ctx)=>{
     const nodeId = ctx.query.id
     const session = driver.session()
@@ -150,6 +159,43 @@ const getLinkedNodes = async (ctx)=>{
     const session = driver.session()
     const res = await session.run(`match (n)--(l) where id(n) = ${nodeId} return id(l), l._str, labels(l)[0]`)
     ctx.body = res.records
+    session.close()
+}
+
+const searchFacilityByName = async (ctx)=>{
+    const searchText = ctx.query.search
+    const session = driver.session()
+    let res
+    if (searchText==='all') {
+        res = await session.run(`match (f:facility) return f.ssNum, f._str order by f.ssNum`)
+    } else {
+        res = await session.run(`match (f:facility) where f.ssName contains '${searchText}' return f.ssNum, f._str order by f.ssNum`)
+    }
+    ctx.body = res.records
+    session.close()
+}
+
+const getAvailList = async (ctx)=>{
+    const landuse = ctx.query.landuse
+    console.log(landuse)
+    const session = driver.session()
+    facilityList = await session.run(`match (f:facility) return f._str as name, id(f) as id, [(f)--(c:const) where c.landuse='${landuse}' | c] as consts`)
+    // facilityList = facilityList.records
+    result = facilityList.records
+    // console.log(result)
+    // result.forEach(rec=>{
+    //     console.log()
+    // })
+    // console.log(result[1].get('id(f)').toInt())
+    // console.log(result[1].get('id(f)').toNumber())
+    // facilityList.forEach(async fac=>{
+    //     const facId = fac.get('id(f)').toInt()
+    //     const consts = await session.run(`match (f:facility) where id(f)=${facId} optional match (f)--(c:const) where c.landuse=${landuse} return c`)
+    //     console.log(consts.records)
+    //     result[facId] = consts
+    // })
+
+    ctx.body = result
     session.close()
 }
 
@@ -175,14 +221,17 @@ const startServer = async ()=>{
     // router.get('/api/facilities', getFacilityByHoMok)
     router.get('/api/facilities', getFacilityList)
     router.get('/api/consts', getConstList)
-    router.get('/api/get-nodes-by-cat', getNodeList)
+    router.get('/api/get-nodes-by-label', getNodeList)
     router.get('/api/facility-by-id', getFacilityById)
     router.get('/api/node-by-id', getNodeById)
     router.get('/api/linked-nodes', getLinkedNodes)
+    router.get('/api/search-facility-by-name', searchFacilityByName)
     // router.get('/api/make-mok-raw-law', createMokRawLaw)
     router.put('/api/make-mok-raw-law', KoaBody(), createMokRawLaw)
     router.put('/api/make-ho-raw-law', KoaBody(), createHoRawLaw)
     // app.use(mount('/', static_pages)).use(router.routes())
+
+    router.get('/get-avail-list', getAvailList)
 
     app.use(router.routes())
 
