@@ -179,9 +179,9 @@ const getAvailList = async (ctx)=>{
     const landuse = ctx.query.landuse
     console.log(landuse)
     const session = driver.session()
-    facilityList = await session.run(`match (f:facility) return f._str as name, id(f) as id, [(f)--(c:const) where c.landuse='${landuse}' | c] as consts`)
+    // facilityList = await session.run(`match (f:facility) return f._str as name, id(f) as id, [(f)--(c:const) where c.landuse='${landuse}' | c] as consts order by name`)
+    facilityList = await session.run(`match (f:facility) optional match (f)--(c:const) where c.landuse='${landuse}' with f._str as name, id(f) as id, c order by f.ssNum, c.chkPriority with name, id, c return name, id, collect(c) as consts`)
     // facilityList = facilityList.records
-    result = facilityList.records
     // console.log(result)
     // result.forEach(rec=>{
     //     console.log()
@@ -194,6 +194,65 @@ const getAvailList = async (ctx)=>{
     //     console.log(consts.records)
     //     result[facId] = consts
     // })
+    result = facilityList.records
+    .map( f=>({
+        name: f.get('name'),
+        id: f.get('id').toInt(),
+        consts: f.get('consts')
+    }) )
+    .map( f=>{
+        let gukgye
+        if (f.consts.length) {
+            // if (f.consts.length===1 && f.consts[0].properties.law==='도시계획조례(서울)') {
+            //     console.log(f.name)
+            //     console.log(f.consts[0].properties)
+            // }
+            if (f.consts[0].properties.law==='국토계획법') {
+                const gukgye_data = f.consts[0].properties
+                if (gukgye_data.effect==='가능') {
+                    gukgye = true
+                } else {
+                    gukgye = 'jorye'
+                }
+            } else {
+                gukgye = false
+            }
+        } else {
+            gukgye = false
+        }
+        return {...f, gukgye: gukgye}
+    })
+    .map( f=>{
+        let jorye
+        if (f.consts.length>1) {
+            if (f.consts[1].properties.law==='도시계획조례(서울)') {
+                const jorye_data = f.consts[1].properties
+                if (jorye_data.effect==='가능') {
+                    jorye = true
+                } else {
+                    console.log('?')
+                }
+            }
+        } else {
+            jorye = false
+        }
+        return {...f, jorye: jorye}
+    } )
+
+    jdList = await session.run(`match (f:facility) optional match (f)--(c:const) where c.landuse='${'지구단위계획구역(국제교류복합지구)'}' with f, c order by f.ssNum return id(f), collect(c) as consts`)
+    // console.log(jdList)
+
+    result = result.map( (f, idx)=>{
+        const jd = jdList.records[idx]
+        let jidan
+        if (jd.get('consts').length) {
+            jidan = jd.get('consts')[0].properties.effect
+            console.log(jidan)
+        } else {
+            jidan = false
+        }
+        return {...f, jidan: jidan}
+    } )
 
     ctx.body = result
     session.close()
