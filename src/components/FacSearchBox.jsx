@@ -19,8 +19,8 @@ export default ({checked, handleCheckedList})=>{
     const [scrollFunction, setScrollFunction] = useState( [(el, idx)=>idx<50? true: false] )
 
     const api = searchText=>searchText?
-    `/api/search-facility-by-name?search=${encodeURI(searchText)}`:
-    `/api/search-facility-by-name?search=${'all'}`
+    `/search/search-facility-by-name?search=${encodeURI(searchText)}`:
+    `/search/search-facility-by-name?search=${'all'}`
 
     // const handleCheck = e=>{
     //     console.log(e)

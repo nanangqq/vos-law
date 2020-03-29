@@ -45,7 +45,7 @@ export default ()=>{
     // }, [checked])
 
     useEffect(()=>{
-        Axios.get(`/api/get-nodes-by-label?label=${encodeURI(tabNames[tab])}`).then(res=>{
+        Axios.get(`/search/get-nodes-by-label?label=${encodeURI(tabNames[tab])}`).then(res=>{
             setNodes( res.data.map(rec=>(
                 <Node key={rec._fields[0].low} nodeId={rec._fields[0].low} nodeName={rec._fields[1]} nodeLabel={rec._fields[2]} nodeFilter={rec._fields[3]} />
             )) )

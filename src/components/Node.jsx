@@ -60,7 +60,7 @@ const Node = ({nodeId, nodeName, nodeLabel})=>{
     useEffect(()=>{
         if (open) {
 
-            Axios.get(`/api/node-by-id?id=${nodeId}`).then(res=>{
+            Axios.get(`/search/node-by-id?id=${nodeId}`).then(res=>{
                 const node = res.data[0]._fields[0]
                 // const tableData = Object.keys(node.properties).map(prop=>({
                 const tableData = propsWillBeShown[nodeLabel].map(prop=>({
@@ -74,7 +74,7 @@ const Node = ({nodeId, nodeName, nodeLabel})=>{
                 }), prev))
             })
 
-            Axios.get(`/api/linked-nodes?id=${nodeId}`).then(res=>{
+            Axios.get(`/search/linked-nodes?id=${nodeId}`).then(res=>{
                 const nodes = res.data.reduce((prev, cur)=>{
                     return { ...prev, [cur._fields[2]]: [...prev[cur._fields[2]], cur] }
                 }, {
