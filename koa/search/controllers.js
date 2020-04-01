@@ -34,7 +34,7 @@ export const getNodeList = async (ctx)=>{
     const filterCol = filterColPicker[label]
     // console.log(filterCol)
     const session = driver.session()
-    const res = await session.run(`match (n:${label}) return id(n), n._str, labels(n)[0], ${filterCol} order by n._str`)
+    const res = await session.run(`match (n:${label}:active) return id(n), n._str, labels(n)[0], ${filterCol} order by n._str`)
     ctx.body = res.records
     // console.log(res)
     session.close()
@@ -52,7 +52,7 @@ export const getFacilityById = async (ctx)=>{
 export const getNodeById = async (ctx)=>{
     const nodeId = ctx.query.id
     const session = driver.session()
-    const res = await session.run(`match (n) where id(n) = ${nodeId} return n`)
+    const res = await session.run(`match (n:active) where id(n) = ${nodeId} return n`)
     ctx.body = res.records
     session.close()
 }
@@ -60,7 +60,7 @@ export const getNodeById = async (ctx)=>{
 export const getLinkedNodes = async (ctx)=>{
     const nodeId = ctx.query.id
     const session = driver.session()
-    const res = await session.run(`match (n)--(l) where id(n) = ${nodeId} return id(l), l._str, labels(l)[0]`)
+    const res = await session.run(`match (n)--(l:active) where id(n) = ${nodeId} return id(l), l._str, labels(l)[0]`)
     ctx.body = res.records
     session.close()
 }
@@ -70,9 +70,9 @@ export const searchFacilityByName = async (ctx)=>{
     const session = driver.session()
     let res
     if (searchText==='all') {
-        res = await session.run(`match (f:facility) return f.ssNum, f._str order by f.ssNum`)
+        res = await session.run(`match (f:facility:active) return f.ssNum, f._str order by f.ssNum`)
     } else {
-        res = await session.run(`match (f:facility) where f.ssName contains '${searchText}' return f.ssNum, f._str order by f.ssNum`)
+        res = await session.run(`match (f:facility:active) where f.ssName contains '${searchText}' return f.ssNum, f._str order by f.ssNum`)
     }
     ctx.body = res.records
     session.close()

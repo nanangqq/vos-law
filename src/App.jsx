@@ -41,6 +41,10 @@ export default ()=>{
     ], [filtered])
     
     // useEffect(()=>{
+    //     Axios.get('/check/get-avail-list?landuse=제2종일반주거지역&jdName=국제교류복합지구&spcLawList=["교육환경법"]').then(console.log)
+    // }, [])
+
+    // useEffect(()=>{
     //     console.log(checked)
     // }, [checked])
 

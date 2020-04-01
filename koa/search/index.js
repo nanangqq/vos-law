@@ -1,5 +1,5 @@
 import Router from 'koa-router'
-import KoaBody from "koa-body"
+// import KoaBody from "koa-body"
 
 import {getFacilityById, getFacilityList, getConstList, getLinkedNodes, getNodeById, getNodeList, searchFacilityByName} from './controllers'
 

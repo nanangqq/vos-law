@@ -5,6 +5,7 @@ import { exec } from "child_process"
 import check from './check'
 import lawParser from './law-parser'
 import search from './search'
+import create from './create'
 
 
 const startServer = async ()=>{
@@ -22,6 +23,7 @@ const startServer = async ()=>{
 
     router.use('/check', check.routes())
     router.use('/search', search.routes())
+    router.use('/create', create.routes())
     router.use('/law-parser', lawParser.routes())
 
     app.use(router.routes())
